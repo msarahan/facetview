@@ -19,6 +19,8 @@ var MONTHS = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
+var dd_width = 850;
+var dd_height = 300;
 
 // first define the bind with delay function from (saves loading it separately) 
 // https://github.com/bgrins/bindWithDelay/blob/master/bindWithDelay.js
@@ -893,10 +895,15 @@ search box - the end user will not know they are happening.
 		var years = ['year'];
                 var year_hits = ['hits'];
 		var lineChartFacet = false;
+		var dendrogramFacet = false;
 		if (facet == options.linechart_field){
 		    lineChartFacet = true;
 		}
 
+		if (facet == options.dendrogram_field){
+		    dendrogramFacet = true;
+		}
+	
                 for ( var item in records ) {
 		    var show_val = null;
 		    if (lineChartFacet){
@@ -911,8 +918,9 @@ search box - the end user will not know they are happening.
 		    if (lineChartFacet){
 			years.push(show_val);
 			year_hits.push(records[item]);
-		    }                    
+		    } 
                 }
+
                 if ( $('.facetview_filtershow[rel="' + facetclean + '"]', obj).hasClass('facetview_open') ) {
                     facet_filter.children().find('.facetview_filtervalue').show();
                 }
@@ -947,6 +955,72 @@ search box - the end user will not know they are happening.
 			    year_hits
 			    ]
 			});
+		}
+
+		if (dendrogramFacet){
+                      $('#dendrogram').empty();
+                      dendrogram = null;
+                      var facet_selected = $('a.facetview_filterselected[rel="'+facet+'"]');
+                      var root = {};
+                      if (facet_selected.length > 0) {
+                          dd_cluster = d3.layout.cluster().size([dd_height, dd_width - 160]);
+                          dd_diagonal = d3.svg.diagonal().projection(function(d) { return [d.y, d.x]; });
+                          dendrogram = d3.select("#dendrogram").append("svg:svg")
+                                         .attr("width", dd_width)
+                                         .attr("height", dd_height)
+                                         .append("svg:g")
+                                         .attr("transform", "translate(80, 0)");
+                          var facet_text = facet_selected[0].text;
+                          root = {
+                              "name": facet_text,
+                              "children": []
+                          };
+
+                          var rel_nodes = [];
+                          for ( var i = 0; i < data.records.length; i++ ) {
+                              var drec = data.records[i];
+			      var drec_length = 0;
+			      var drec_facet = eval('drec.'+facet);
+			      if (drec_facet != undefined){
+				  drec_length = drec_facet.length;
+			      }
+                              for (var j = 0; j < drec_length; j++) {
+                                  var rel_node = eval('drec.'+facet+'[j]');
+                                  if (facet_text.toLowerCase().trim() != rel_node.toLowerCase().trim() && rel_nodes.indexOf(rel_node) == -1) {
+                                      root.children.push({ "name": rel_node, "children": []});
+                                      rel_nodes.push(rel_node);
+                                  }
+                              }
+                          }
+
+                          var nodes = dd_cluster.nodes(root),
+                              links = dd_cluster.links(nodes);
+
+                          var link = dendrogram.selectAll(".link")
+                              .data(links)
+                            .enter().append("path")
+                              .attr("class", "link")
+                              .attr("d", dd_diagonal);
+
+                          var node = dendrogram.selectAll(".node")
+                              .data(nodes)
+                            .enter().append("g")
+                              .attr("class", "node")
+                              .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; })
+
+                          node.append("circle")
+                              .attr("r", 4.5);
+
+                          node.append("text")
+                              .attr("dx", function(d) { return d.children ? -8 : 8; })
+                              .attr("dy", 3)
+                              .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+                              .text(function(d) { return d.name; });
+
+                        d3.select(self.frameElement).style("height", dd_height + "px");
+
+		     }
+
 		}
 
             }

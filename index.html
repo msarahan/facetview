@@ -35,7 +35,7 @@ jQuery(document).ready(function($) {
     "facets": [
         {'field':'itemOffered.category', 'display':'Gun Type'},
         {'field':'manufacturer', 'display':'Manufacturer'},
-        {'field': 'keywords', 'display' : 'Keywords'},
+        {'field':'itemOffered.keywords', 'display' : 'Keywords'},
         {'field':'price', 'display':'Price'},
         {'field':'seller.description.raw', 'display':'Seller'},
         {'field':'publisher.name', 'display':'Site'},
@@ -47,7 +47,8 @@ jQuery(document).ready(function($) {
         from: 0,
         size: 10
     },
-    "linechart_field" : "seller.memberOf.startDate",
+    "linechart_field"  : "seller.memberOf.startDate",
+    "dendrogram_field" : "itemOffered.keywords", 
     "display_images" : false,
     "sort" : [{ 'dateCreated': { "order": "desc"} }],
     "result_display" : [
@@ -56,6 +57,20 @@ jQuery(document).ready(function($) {
             "pre" : "<h3>",
             "field" : "title",
             "post" : "</h3>"
+          }
+        ],
+        [
+          {
+            "pre" : "<i>Site: ",
+            "field" : "publisher.name",
+            "post" : "</i>"
+          }
+        ],
+        [
+          {
+            "pre" : "<i><font color='red'>",
+            "field" : "seller.description",
+            "post" : "</font></i>"
           }
         ],
         [
