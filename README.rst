@@ -167,6 +167,7 @@ Copyright and License
 =====================
 
 Copyright 2015- Chris Mattmann and Paul Ramirez
+
 Copyright 2011 Open Knowledge Foundation and Cottage Labs.
 
 Licensed under the `Apache Software License, version 2`_
