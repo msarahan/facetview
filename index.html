@@ -30,7 +30,7 @@
   <script type="text/javascript">
 jQuery(document).ready(function($) {
   $('.facet-view-simple').facetview({
-    "search_url": 'http://localhost:9200/index/_search?',
+    "search_url": 'http://localhost:9200/index_name/_search?',
     "search_index": 'elasticsearch',
     "datatype": 'json',
     "facets": [
@@ -46,6 +46,8 @@ jQuery(document).ready(function($) {
         from: 0,
         size: 10
     },
+    // "linechart_field"  : "pub_year",
+    "dendrogram_field" : "authors", 
     "display_images" : false,
     "result_display" : [
         [
