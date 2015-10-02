@@ -14,8 +14,8 @@ Development is now taking place in this repo: http://github.com/okfn/facetview
 Demo
 ====
 
-See http://okfnlabs.org/facetview/ or if you have the source just take a look 
-at index.html or simple.html
+- See http://okfnlabs.org/facetview/ (no search functionality, elasticsearch cluster no longer active)
+- Or if you have the source just take a look at index.html or simple.html and run elasticsearch on local machine
 
 
 Status
