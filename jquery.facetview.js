@@ -1321,7 +1321,6 @@ search box - the end user will not know they are happening.
                 url_1 = options.search_url + solrsearchquery();
                 qrystr = solrsearchquery();
             }
-            var qrystr = elasticsearchquery();
 
             // augment the URL bar if possible
             if ( options.pushstate ) {
