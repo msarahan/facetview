@@ -113,20 +113,14 @@ if (!Array.prototype.indexOf) {
 }
 
 /* EXPLAINING THE FACETVIEW OPTIONS
-
 Facetview options can be set on instantiation. The list below details which options are available.
-
 Options can also be set and retrieved externally via $.fn.facetview.options.
-
 Query values can also be read from the query parameters of the current page, or provided in
 the "source" option for initial search.
-
 Also, whilst facetview is executing a query, it will "show" any element with the "notify-loading" class.
 So that class can be applied to any element on a page that can be used to signify loading is taking place.
-
 Once facetview has executed a query, the querystring used is available under "options.querystring".
 And the result object as retrieved directly from the index is available under "options.rawdata".
-
 searchbox_class
 ---------------
 This should only be set if embedded_search is set to false, and if an alternative search box on the page should 
@@ -137,7 +131,6 @@ it should really identify a unique box on the page for entering search terms for
 So an ID could actually also be used - just precede with # instead of .
 This makes it possible to embed a search box anywhere on a page and have it be used as the source of simple 
 search parameters for the facetview. Only the last text box with this clas will be used.
-
 embedded_search
 ---------------
 Default to true, in which case full search term functionality is created and displayed on the page.
@@ -146,190 +139,152 @@ be provided by the user.
 It is possible to set an alternative search term input box on the page instead, by setting this to false and 
 also setting a searchbox_class value to identify the basic source of search terms, in which case such a box 
 must be manually created elsewhere on the page.
-
 searchbox_shade
 ---------------
 The background colour to apply to the search box
-
 sharesave_link
 --------------
 Default to true, in which case the searchbox - if drawn by facetview - will be appended with a button that 
 shows the full current search parameters as a URL.
-
 config_file
 -----------
 Specify as a URL from which to pull a JSON config file specifying these options.
-
 facets
 ------
 A list of facet objects which should be created as filter options on the page.
 As per elasticsearch facets settings, plus "display" as a display name for the facet, instead of field name.
 If these should be nested, define them with full scope e.g. nestedobj.nestedfield.
-
 extra_facets
 ------------
 An object of named extra facet objects that should be submitted and executed on each query.
 These will NOT be used to generate filters on the page, but the result object can be queried 
 for their content for other purposes.
-
 searchbox_fieldselect
 ---------------------
 A list of objects specifying fields to which search terms should be restricted.
 Each object should have a "display" value for displaying as the name of the option, 
 and a "field" option specifying the field to restrict the search to.
-
 search_sortby
 ----------------
 A list of objects describing sort option dropdowns. 
 Each object requires a "display" value, and "field" value upon which to sort results.
 NOTE sort fields must be unique on the ES index, NOT lists. Otherwise it will fail silently. Choose wisely.
-
 enable_rangeselect
 ------------------
 RANGES NEED SOME WORK AFTER RECENT UPDATE, KEEP DISABLED FOR NOW
 Enable or disable the ability to select a range of filter values
-
 include_facets_in_querystring
 -----------------------------
 Default to false.
 Whether or not to include full facet settings in the querystring when it is requested for display.
 This makes it easier to get the querystring for other purposes, but does not change the query that is 
 sent to the index.
-
 result_display
 --------------
 A display template for search results. It is a list of lists.
 Each list specifies a line. Within each list, specify the contents of the line using objects to describe 
 them. Each content piece should pertain to a particular "field" of the result set, and should specify what 
 to show "pre" and "post" the given field
-
 display_images
 --------------
 Default to true, in which case any image found in a given result object will be displayed to the left 
 in the result object output.
-
 description
 -----------
 Just an option to provide a human-friendly description of the functionality of the instantiated facetview.
 Like "search my shop". Will be displayed on the page. 
-
 search_url
 ----------
 The URL at the index to which searches should be submitted in order to retrieve JSON results.
-
 datatype
 --------
 The datatype that should be used when submitting a search to the index - e.g. JSON for local, JSONP for remote.
-
 initialsearch
 -------------
 Default to true, in which case a search-all will be submitted to the index on page load.
 Set to false to wait for user input before issuing the first search.
-
 fields
 ------
 A list of which fields the index should return in result objects (by default elasticsearch returns them all).
-
 partial_fields
 --------------
 A definition of which fields to return, as per elasticsearch docs http://www.elasticsearch.org/guide/reference/api/search/fields.html
-
 nested
 ------
 A list of keys for which the content should be considered nested for query and facet purposes.
 NOTE this requires that such keys be referenced with their full scope e.g. nestedobj.nestedfield.
 Only works on top-level keys so far.
-
 default_url_params
 ------------------
 Any query parameters that the index search URL needs by default.
-
 freetext_submit_delay
 ---------------------
 When search terms are typed in the search box, they are automatically submitted to the index.
 This field specifies in milliseconds how long to wait before sending another query - e.g. waiting
 for the user to finish typing a word.
-
 q
 -
 Specify a query value to start with when the page is loaded. Will be submitted as the initial search value 
 if initialsearch is enabled. Will also be set as the value of the searchbox on page load.
-
 predefined_filters
 ------------------
 Facet / query values to apply to all searches. Give each one a reference key, then in each object define it 
 as per an elasticsearch query for appending to the bool must. 
 If these filters should be applied at the nested level, then prefix the name with the relevant nesting prefix. 
 e.g. if the nested object is called stats, call the filter stats.MYFILTER.
-
 filter
 -------
 JSON document describing an `elasticsearch filter <http://www.elasticsearch.org/guide/reference/api/search/filter/>`_
-
 paging
 ------
 An object defining the paging settings:
-
     from
     ----
     Which result number to start displaying results from
-
     size
     ----
     How many results to get and display per "page" of results
-
 pager_on_top
 ------------
 Default to false, in which case the pager - e.g. result count and prev / next page buttons - only appear 
 at the bottom of the search results.
 Set to true to show the pager at the top of the search results as well.
-
 pager_slider
 ------------
 If this is set to true, then the paging options will be a left and right arrow at the bottom, with the 
 count in between, but a bit bigger and more slider-y than the standard one. Works well for displaying 
 featured content, for example.
-
 sort
 ----
 A list of objects defining how to sort the results, as per elasticsearch sorting.
-
 searchwrap_start
 searchwrap_end
 ----------------
 HTML values in which to wrap the full result set, to style them into the page they are being injected into.
-
 resultwrap_start
 resultwrap_end
 ----------------
 HTML values in which to wrap each result object
-
 result_box_colours
 ------------------
 A list of background colours that will be randomly assigned to each result object that has the "result_box" 
 class. To use this, specify the colours in this list and ensure that the "result_display" option uses the 
 "result_box" class to wrap the result objects.
-
 fadein
 ------
 Define a fade-in delay in milliseconds so that whenever a new list of results is displays, it uses the fade-in effect.
-
 post_search_callback
 --------------------
 This can define or reference a function that will be executed any time new search results are retrieved and presented on the page.
-
 pushstate
 ---------
 Updates the URL string with the current query when the user changes the search terms
-
 linkify
 -------
 Makes any URLs in the result contents into clickable links
-
 default_operator
 ----------------
 Sets the default operator in text search strings - elasticsearch uses OR by default, but can also be AND
-
 default_freetext_fuzzify
 ------------------------
 If this exists and is not false, it should be either * or ~. If it is * then * will be prepended and appended
@@ -337,7 +292,6 @@ to each string in the freetext search term, and if it is ~ then ~ will be append
 search term. If * or ~ or : are already in the freetext search term, it will be assumed the user is already trying 
 to do a complex search term so no action will be taken. NOTE these changes are not replicated into the freetext 
 search box - the end user will not know they are happening.
-
 */
 
 
@@ -419,6 +373,16 @@ search box - the end user will not know they are happening.
             "sharesave_link": true,
             "description":"",
             "facets":[],
+            "default_url_params":{
+            'facet.mincount':1,
+            'wt':'json',
+            'indent':'true'
+            },
+            "solr_paging_params":{
+                "from":"start",
+                "size":"rows"
+            },
+            "query_parameter":"q",
             "extra_facets": {},
             "enable_rangeselect": false,
             "include_facets_in_querystring": false,
@@ -747,27 +711,47 @@ search box - the end user will not know they are happening.
             resultobj["start"] = "";
             resultobj["found"] = "";
             resultobj["facets"] = new Object();
-            for ( var item = 0; item < dataobj.hits.hits.length; item++ ) {
-                if ( options.fields ) {
-                    resultobj["records"].push(dataobj.hits.hits[item].fields);
-                } else if ( options.partial_fields ) {
-                    var keys = [];
-                    for(var key in options.partial_fields){
-                        keys.push(key);
+            if (options.search_index == "elasticsearch"){
+                for ( var item = 0; item < dataobj.hits.hits.length; item++ ) {
+                    if ( options.fields ) {
+                        resultobj["records"].push(dataobj.hits.hits[item].fields);
+                    } else if ( options.partial_fields ) {
+                        var keys = [];
+                        for(var key in options.partial_fields){
+                            keys.push(key);
+                        }
+                        resultobj["records"].push(dataobj.hits.hits[item].fields[keys[0]]);
+                    } else {
+                        resultobj["records"].push(dataobj.hits.hits[item]._source);
                     }
-                    resultobj["records"].push(dataobj.hits.hits[item].fields[keys[0]]);
-                } else {
-                    resultobj["records"].push(dataobj.hits.hits[item]._source);
+                }
+                resultobj["start"] = "";
+                resultobj["found"] = dataobj.hits.total;
+                for (var item in dataobj.facets) {
+                    var facetsobj = new Object();
+                    for (var thing = 0; thing < dataobj.facets[item]["terms"].length; thing++) {
+                        facetsobj[ dataobj.facets[item]["terms"][thing]["term"] ] = dataobj.facets[item]["terms"][thing]["count"];
+                    }
+                    resultobj["facets"][item] = facetsobj;
                 }
             }
-            resultobj["start"] = "";
-            resultobj["found"] = dataobj.hits.total;
-            for (var item in dataobj.facets) {
-                var facetsobj = new Object();
-                for (var thing = 0; thing < dataobj.facets[item]["terms"].length; thing++) {
-                    facetsobj[ dataobj.facets[item]["terms"][thing]["term"] ] = dataobj.facets[item]["terms"][thing]["count"];
+            else{
+                resultobj["records"] = dataobj.response.docs;
+                resultobj["start"] = dataobj.response.start;
+                resultobj["found"] = dataobj.response.numFound;
+                if (dataobj.facet_counts) {
+                    for (var item in dataobj.facet_counts.facet_fields) {
+                        var facetsobj = new Object();
+                        var count = 0;
+                        for ( var each in dataobj.facet_counts.facet_fields[item]) {
+                            if ( count % 2 == 0 ) {
+                            facetsobj[ dataobj.facet_counts.facet_fields[item][each] ] = dataobj.facet_counts.facet_fields[item][count + 1];
+                            }
+                            count += 1;
+                        }
+                        resultobj["facets"][item] = facetsobj;
+                    }
                 }
-                resultobj["facets"][item] = facetsobj;
             }
             return resultobj;
         };
@@ -810,7 +794,7 @@ search box - the end user will not know they are happening.
                 if ( addressed_ob !== undefined ) {
                     var thevalue = [];
                     for ( var row = 0; row < addressed_ob.length; row++ ) {
-                        thevalue.push(getvalue(addressed_ob[row], left));
+                        thevalue.push(addressed_ob[row]);
                     }
                     return thevalue;
                 } else {
@@ -918,7 +902,7 @@ search box - the end user will not know they are happening.
             facet_filter.append(append);
 
             if (lineChartFacet){
-                years.push(show_val);
+                years.push(item);
                 year_hits.push(records[item]);
             } 
 
@@ -974,27 +958,28 @@ search box - the end user will not know they are happening.
                                          .append("svg:g")
                                          .attr("transform", "translate(80, 0)");
                           var facet_text = facet_selected[0].text;
+                          //alert(facet_text);
                           root = {
                               "name": facet_text,
                               "children": []
                           };
-
+                          alert(data.records);
                           var rel_nodes = [];
                           for ( var i = 0; i < data.records.length; i++ ) {
-                              var drec = data.records[i];
-                  var drec_length = 0;
-                  var drec_facet = eval('drec.'+facet);
-                  if (drec_facet != undefined){
-                  drec_length = drec_facet.length;
-                  }
-                              for (var j = 0; j < drec_length; j++) {
-                                  var rel_node = eval('drec.'+facet+'[j]');
-                                  if (facet_text.toLowerCase().trim() != rel_node.toLowerCase().trim() && rel_nodes.indexOf(rel_node) == -1) {
-                                      root.children.push({ "name": rel_node, "children": []});
-                                      rel_nodes.push(rel_node);
-                                  }
-                              }
-                          }
+                                var drec = data.records[i];
+                                var drec_length = 0;
+                                var drec_facet = eval('drec.'+facet);
+                                if (drec_facet != undefined){
+                                    drec_length = drec_facet.length;
+                                }
+                                for (var j = 0; j < drec_length; j++) {
+                                    var rel_node = eval('drec.'+facet+'[j]');
+                                    if (facet_text.toLowerCase().trim() != rel_node.toLowerCase().trim() && rel_nodes.indexOf(rel_node) == -1) {
+                                        root.children.push({ "name": rel_node, "children": []});
+                                        rel_nodes.push(rel_node);
+                                        }
+                                    }
+                            }
 
                           var nodes = dd_cluster.nodes(root),
                               links = dd_cluster.links(nodes);
@@ -1270,6 +1255,53 @@ search box - the end user will not know they are happening.
             return qy;
         };
 
+        //Solr Search
+        var solrsearchquery = function() {
+            // set default URL params
+            var urlparams = "";
+            for (var item in options.default_url_params) {
+                urlparams += item + "=" + options.default_url_params[item] + "&";
+            }
+            // do paging params
+            var pageparams = "";
+            for (var item in options.paging) {
+                pageparams += options.solr_paging_params[item] + "=" + options.paging[item] + "&";
+            }
+            // set facet params
+            var urlfilters = "";
+            for (var item in options.facets) {
+                urlfilters += "facet.field=" + options.facets[item]['field'] + "&";
+                if ( options.facets[item]['size'] ) {
+                    urlfilters += "f." + options.facets[item]['field'] + ".facet.limit=" + options.facets[item]['size'] + "&";
+                }
+            }
+            if ( options.facets.length > 0 ) {
+                urlfilters += "facet=on&";
+            }
+            // build starting URL
+            var theurl = urlparams + pageparams + urlfilters;
+            // add default query values
+            // build the query, starting with default values
+            var query = "";
+            //for (var item in options.predefined_filters) {
+            // query += item + ":" + options.predefined_filters[item] + " AND ";
+            //}
+            $('.facetview_filterselected',obj).each(function() {
+                query += $(this).attr('rel') + ':"' +
+                $(this).attr('href') + '" AND ';
+            });
+            // add any freetext filter
+            if (options.q != "") {
+                query += options.q + '*';
+            }
+            query = query.replace(/ AND $/,"");
+            // set a default for blank search
+            if (query == "") {
+                query = "*:*";
+            }
+            theurl += options.query_parameter + '=' + query;
+            return theurl;
+         };
         // execute a search
         var dosearch = function() {
             jQuery('.notify_loading').show();
@@ -1280,7 +1312,17 @@ search box - the end user will not know they are happening.
                 options.q = $(options.searchbox_class).last().val();
             };
             // make the search query
+            var qrystr = '';
+            var url_1 = '';
+            if ( options.search_index == "elasticsearch") {
+                url_1 = options.search_url;
+                qrystr = elasticsearchquery();
+            } else if (options.search_index == "solr") {
+                url_1 = options.search_url + solrsearchquery();
+                qrystr = solrsearchquery();
+            }
             var qrystr = elasticsearchquery();
+
             // augment the URL bar if possible
             if ( options.pushstate ) {
                 var currurl = '?source=' + options.querystring;
@@ -1288,10 +1330,11 @@ search box - the end user will not know they are happening.
             };
             $.ajax({
                 type: "get",
-                url: options.search_url,
+                url: url_1,
                 data: {source: qrystr},
                 // processData: false,
                 dataType: options.datatype,
+                jsonp: "json.wrf",
                 success: showresults
             });
         };
