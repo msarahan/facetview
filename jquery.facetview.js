@@ -963,7 +963,7 @@ search box - the end user will not know they are happening.
                               "name": facet_text,
                               "children": []
                           };
-                          alert(data.records);
+                          //alert(data.records);
                           var rel_nodes = [];
                           for ( var i = 0; i < data.records.length; i++ ) {
                                 var drec = data.records[i];
@@ -1317,10 +1317,11 @@ search box - the end user will not know they are happening.
             if ( options.search_index == "elasticsearch") {
                 url_1 = options.search_url;
                 qrystr = elasticsearchquery();
-            } else if (options.search_index == "solr") {
+            } else {
                 url_1 = options.search_url + solrsearchquery();
                 qrystr = solrsearchquery();
             }
+            //var qrystr = elasticsearchquery();
 
             // augment the URL bar if possible
             if ( options.pushstate ) {
