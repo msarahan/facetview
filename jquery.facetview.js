@@ -776,6 +776,7 @@ search box - the end user will not know they are happening.
 
         // used to get value by dotted notation in result_display
         var getvalue = function(obj, dotted_notation) {
+            if(!dotted_notation) return;
             var parts = dotted_notation.split('.');
             parts.reverse();
             var ref = [parts.pop()];
@@ -1390,7 +1391,7 @@ search box - the end user will not know they are happening.
         // parse any source params out for an initial search
         var parsesource = function() {
             var qrystr = options.source.query;
-            if ( 'bool' in qrystr ) {
+            if (qrystr && 'bool' in qrystr ) {
                 var qrys = [];
                 // TODO: check for nested
                 if ( 'must' in qrystr.bool ) {
@@ -1413,7 +1414,7 @@ search box - the end user will not know they are happening.
                         };
                     };
                 };
-            } else if ( 'query_string' in qrystr ) {
+            } else if (qrystr &&  'query_string' in qrystr ) {
                 typeof(qrystr.query_string.query) == 'string' ? options.q = qrystr.query_string.query : "";
             };
         }
