@@ -589,7 +589,7 @@ search box - the end user will not know they are happening.
                 var filters = options.facets;
                 var thefilters = '';
                 for ( var idx = 0; idx < filters.length; idx++ ) {
-                    var _filterTmpl = '<table id="facetview_{{FILTER_NAME}}" class="facetview_filters table table-bordered table-condensed table-striped" style="display:none;"> \
+                    var _filterTmpl = '<table id="facetview_{{FILTER_NAME}}" class="facetview_filters table table-bordered table-condensed table-striped"> \
                         <tr><td><a class="facetview_filtershow" title="filter by {{FILTER_DISPLAY}}" rel="{{FILTER_NAME}}" \
                         style="color:#333; font-weight:bold;" href=""><i class="icon-plus"></i> {{FILTER_DISPLAY}} \
                         </a> \
@@ -1259,7 +1259,7 @@ search box - the end user will not know they are happening.
         //Solr Search
         var solrsearchquery = function() {
             // set default URL params
-            var urlparams = "";
+            var urlparams = "wt=json&";
             for (var item in options.default_url_params) {
                 urlparams += item + "=" + options.default_url_params[item] + "&";
             }
@@ -1293,7 +1293,10 @@ search box - the end user will not know they are happening.
             });
             // add any freetext filter
             if (options.q != "") {
-                query += options.q + '*';
+                query += options.q;
+            }
+            if (!query.endsWith('*')) {
+                query += '*';
             }
             query = query.replace(/ AND $/,"");
             // set a default for blank search
@@ -1314,15 +1317,12 @@ search box - the end user will not know they are happening.
             };
             // make the search query
             var qrystr = '';
-            var url_1 = '';
+            var url_1 = options.search_url;;
             if ( options.search_index == "elasticsearch") {
-                url_1 = options.search_url;
                 qrystr = elasticsearchquery();
             } else {
-                url_1 = options.search_url + solrsearchquery();
                 qrystr = solrsearchquery();
             }
-            //var qrystr = elasticsearchquery();
 
             // augment the URL bar if possible
             if ( options.pushstate ) {
@@ -1332,8 +1332,8 @@ search box - the end user will not know they are happening.
             $.ajax({
                 type: "get",
                 url: url_1,
-                data: {source: qrystr},
-                // processData: false,
+                data: qrystr,
+                processData: false,
                 dataType: options.datatype,
                 jsonp: "json.wrf",
                 success: showresults
