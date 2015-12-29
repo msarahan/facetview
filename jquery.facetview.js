@@ -401,8 +401,9 @@ search box - the end user will not know they are happening.
             "predefined_filters":{},
             "paging":{
                 "from":0,
-                "size":10
+                "size":10,
             },
+            "facet_size":10,
             "pager_on_top": false,
             "pager_slider": false,
             "searchwrap_start":'<table class="table table-striped table-bordered" id="facetview_results">',
@@ -1580,6 +1581,11 @@ search box - the end user will not know they are happening.
                     buildfilters();
                     $(options.searchbox_class).bindWithDelay('keyup',dosearch,options.freetext_submit_delay);
                 }
+
+                // Properly set size for each facet
+                $.each(options.facets, function(facet){
+                  options.facets[facet]["size"] = options.facet_size;
+                });
 
                 options.source || options.initialsearch ? dosearch() : "";
 
