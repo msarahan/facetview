@@ -1066,6 +1066,9 @@ search box - the end user will not know they are happening.
             // put the filtered results on the page
             $('#facetview_results',obj).html("");
             var infofiltervals = new Array();
+
+	    // TODO this is where we should limit number and apply sort
+
             $.each(data.records, function(index, value) {
                 // write them out to the results div
                  $('#facetview_results', obj).append( buildrecord(index) );

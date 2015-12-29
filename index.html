@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Example</title>
+  <title>ATF FacetView</title>
 
   <script type="text/javascript" src="vendor/jquery/1.7.1/jquery-1.7.1.min.js"></script>
 
@@ -30,17 +30,25 @@
   <script type="text/javascript">
 jQuery(document).ready(function($) {
   $('.facet-view-simple').facetview({
+      // "config_file": "http://imagecat.dyndns.org/atf/facetview/atf_images_cfg.json"
     "search_url": "http://imagecat.dyndns.org:8983/solr/imagecat/select?",
     "search_index": "solr",
-    "datatype": "json",
     "facets": [
-        {"field":"content", "display":"Content"},
-        {"field":"persons", "display":"Persons"},
-        {"field":"weaponnames", "display":"Weapon Name"},
-        {"field":"location", "display":"Location"},
+        {"field":"cameraserialnumber_t_md", "display":"Camera Model Serial Number"},
+        {"field":"author_t_md", "display":"Author (Image)"},
+        {"field":"exifimageheight_t_md", "display":"Image Height"},
+        {"field":"exifimagewidth_t_md", "display":"Image Width"},
+        {"field":"software_t_md", "display":"Software"},
+        {"field":"make_t_md", "display":"Camera Make"},
+        {"field":"flash_t_md", "display":"Flash Fired"},
+        {"field":"scenetype_t_md", "display":"Scene Type"},
+        {"field":"lightsource_t_md", "display":"Light Source"},
+        {"field":"geo:lat_d_md", "display":"Latitude"},
+        {"field":"geo:long_d_md", "display":"Longitude"},
+        // {"field":"content", "display":"Content"},
+        {"field":"date/time_t_md", "display":"Date/Time"}
     ],
-    "linechart_field"  : "content",
-    "dendrogram_field" : "content", 
+    "linechart_field"  : "date/time_t_md",
     "display_images" : true,
     "result_display" : [
         [
@@ -73,9 +81,9 @@ jQuery(document).ready(function($) {
         ]
     ],
     "linkify" : true
-    }
-  );
-$('.facetview_filtershow' ).trigger( "click" );
+
+    });
+// $('.facetview_filtershow' ).trigger( "click" );
 });
   </script>
 </head>
