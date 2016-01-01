@@ -1275,10 +1275,22 @@ search box - the end user will not know they are happening.
             var urlfilters = "";
             for (var item in options.facets) {
                 urlfilters += "facet.field=" + options.facets[item]['field'] + "&";
-                if ( options.facets[item]['size'] ) {
-                    urlfilters += "f." + options.facets[item]['field'] + ".facet.limit=" + options.facets[item]['size'] + "&";
-                }
+                var size = options.facets[item]['size'] ? options.facets[item]['size'] : 10;
+                urlfilters += "f." + options.facets[item]['field'] + ".facet.limit=" + size + "&";
+                var sort = 'count';
+                if (options.facets[item]['order']) {
+                    sort = options.facets[item]['order'];
+                    if (sort === 'term' || sort === 'reverse_term') {
+                        sort = 'index';
+                    }
+                    else {
+                        sort = 'count';
+                    };
+                };
+                urlfilters += "f." + options.facets[item]['field'] + ".facet.sort=" + sort + "&";
             }
+            urlfilters += "facet.mincount=1&";
+
             if ( options.facets.length > 0 ) {
                 urlfilters += "facet=on&";
             }
