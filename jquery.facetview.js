@@ -401,8 +401,9 @@ search box - the end user will not know they are happening.
             "predefined_filters":{},
             "paging":{
                 "from":0,
-                "size":10
+                "size":10,
             },
+            "facet_size":10,
             "pager_on_top": false,
             "pager_slider": false,
             "searchwrap_start":'<table class="table table-striped table-bordered" id="facetview_results">',
@@ -511,7 +512,7 @@ search box - the end user will not know they are happening.
             }
             var newmore = prompt('Currently showing ' + currentval + '. How many would you like instead?');
             if (newmore) {
-                options.facets[ $(this).attr('rel') ]['size'] = parseInt(newmore);
+                options.facets[ $(this).attr('rel') ]['result_size'] = parseInt(newmore);
                 $(this).html(newmore);
                 dosearch();
             }
@@ -880,6 +881,7 @@ search box - the end user will not know they are happening.
             // for each filter setup, find the results for it and append them to the relevant filter
             for ( var each = 0; each < options.facets.length; each++ ) {
                 var facet = options.facets[each]['field'];
+                var result_size = options.facets[each]['result_size']
                 var facetclean = options.facets[each]['field'].replace(/\./gi,'_').replace(/\:/gi,'_');
                 var facet_filter = $('[id="facetview_'+facetclean+'"]', obj);
                 facet_filter.children().find('.facetview_filtervalue').remove();
@@ -896,18 +898,23 @@ search box - the end user will not know they are happening.
             dendrogramFacet = true;
         }
     
-        for ( var item in records ) {
+        // Limit selectable results to result_size
+        keys = Object.keys(records).slice(0, result_size)
+        for (var item in keys) {
             var append = '<tr class="facetview_filtervalue" style="display:none;"><td><a class="facetview_filterchoice' +
-                '" rel="' + facet + '" href="' + item + '">' + item +
-                ' (' + records[item] + ')</a></td></tr>';
+                '" rel="' + facet + '" href="' + keys[item] + '">' + keys[item] +
+                ' (' + records[keys[item]] + ')</a></td></tr>';
             facet_filter.append(append);
+        }
 
+        // Fill plot with every record
+        for(item in records){
             if (lineChartFacet){
                 years.push(item);
                 year_hits.push(records[item]);
-            } 
-
             }
+        }
+
 
             if ( $('.facetview_filtershow[rel="' + facetclean + '"]', obj).hasClass('facetview_open') ) {
                 facet_filter.children().find('.facetview_filtervalue').show();
@@ -1592,6 +1599,11 @@ search box - the end user will not know they are happening.
                     buildfilters();
                     $(options.searchbox_class).bindWithDelay('keyup',dosearch,options.freetext_submit_delay);
                 }
+
+                // Properly set size for each facet
+                $.each(options.facets, function(facet){
+                  options.facets[facet]["result_size"] = options.facet_size;
+                });
 
                 options.source || options.initialsearch ? dosearch() : "";
 
