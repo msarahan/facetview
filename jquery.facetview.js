@@ -589,7 +589,7 @@ search box - the end user will not know they are happening.
                 var filters = options.facets;
                 var thefilters = '';
                 for ( var idx = 0; idx < filters.length; idx++ ) {
-                    var _filterTmpl = '<table id="facetview_{{FILTER_NAME}}" class="facetview_filters table table-bordered table-condensed table-striped" style="display:none;"> \
+                    var _filterTmpl = '<table id="facetview_{{FILTER_NAME}}" class="facetview_filters table table-bordered table-condensed table-striped"> \
                         <tr><td><a class="facetview_filtershow" title="filter by {{FILTER_DISPLAY}}" rel="{{FILTER_NAME}}" \
                         style="color:#333; font-weight:bold;" href=""><i class="icon-plus"></i> {{FILTER_DISPLAY}} \
                         </a> \
@@ -810,6 +810,9 @@ search box - the end user will not know they are happening.
             var result = options.resultwrap_start;
             // add first image where available
             if (options.display_images) {
+
+                // TODO: this is where we need to take the URL as stored in ID field, translate it to a web URL, and show it.
+
                 var recstr = JSON.stringify(record);
                 var regex = /(http:\/\/\S+?\.(jpg|png|gif|jpeg))/;
                 var img = regex.exec(recstr);
@@ -826,11 +829,10 @@ search box - the end user will not know they are happening.
                     var thekey = display[lineitem][object]['field'];
                     var thevalue = getvalue(record, thekey);
                     if (thevalue && thevalue.toString().length) {
-                        display[lineitem][object]['pre']
-                            ? line += display[lineitem][object]['pre'] : false;
+                            line += display[lineitem][object]['pre'] ? display[lineitem][object]['pre'] : false;
                         if ( typeof(thevalue) == 'object' ) {
                             for ( var val = 0; val < thevalue.length; val++ ) {
-                                val != 0 ? line += ', ' : false;
+                                line += val != 0 ? ', ' : false;
                                 line += thevalue[val];
                             }
                         } else {
@@ -884,6 +886,24 @@ search box - the end user will not know they are happening.
                 var facet_filter = $('[id="facetview_'+facetclean+'"]', obj);
                 facet_filter.children().find('.facetview_filtervalue').remove();
                 var records = data["facets"][ facet ];
+
+                // compensate for Solr not being able to show facet results in reverse order
+                if ("order" in options.facets[each] && options.facets[each]["order"].indexOf("reverse") > -1) {
+                    // http://stackoverflow.com/questions/18977881/can-i-loop-through-a-javascript-object-in-reverse-order 
+                    function ReverseObject(Obj){
+                        var TempArr = [];
+                        var NewObj = {};
+                        for (var Key in Obj){
+                            TempArr.push(Key);
+                        }
+                        for (var i = TempArr.length-1; i >= 0; i--){
+                            NewObj[TempArr[i]] = Obj[TempArr[i]];
+                        }
+                        return NewObj;
+                    };
+                    records = ReverseObject(records);
+                }
+
         var years = ['year'];
                 var year_hits = ['hits'];
         var lineChartFacet = false;
@@ -1050,7 +1070,7 @@ search box - the end user will not know they are happening.
             if (data.found) {
                 var from = options.paging.from + 1;
                 var size = options.paging.size;
-                !size ? size = 10 : "";
+                !size ? size = 100 : "";
                 var to = options.paging.from+size;
                 data.found < to ? to = data.found : "";
                 var meta = metaTmpl.replace(/{{from}}/g, from);
@@ -1066,6 +1086,7 @@ search box - the end user will not know they are happening.
             // put the filtered results on the page
             $('#facetview_results',obj).html("");
             var infofiltervals = new Array();
+
             $.each(data.records, function(index, value) {
                 // write them out to the results div
                  $('#facetview_results', obj).append( buildrecord(index) );
@@ -1208,7 +1229,7 @@ search box - the end user will not know they are happening.
             };
             // set any paging
             options.paging.from != 0 ? qs['from'] = options.paging.from : "";
-            options.paging.size != 10 ? qs['size'] = options.paging.size : "";
+            options.paging.size != 100 ? qs['size'] = options.paging.size : "";
             // set any sort or fields options
             options.sort.length > 0 ? qs['sort'] = options.sort : "";
             options.fields ? qs['fields'] = options.fields : "";
@@ -1259,7 +1280,7 @@ search box - the end user will not know they are happening.
         //Solr Search
         var solrsearchquery = function() {
             // set default URL params
-            var urlparams = "";
+            var urlparams = "wt=json&";
             for (var item in options.default_url_params) {
                 urlparams += item + "=" + options.default_url_params[item] + "&";
             }
@@ -1272,10 +1293,23 @@ search box - the end user will not know they are happening.
             var urlfilters = "";
             for (var item in options.facets) {
                 urlfilters += "facet.field=" + options.facets[item]['field'] + "&";
-                if ( options.facets[item]['size'] ) {
-                    urlfilters += "f." + options.facets[item]['field'] + ".facet.limit=" + options.facets[item]['size'] + "&";
-                }
-            }
+                var size = options.facets[item]['size'] ? options.facets[item]['size'] : 10;
+                urlfilters += "f." + options.facets[item]['field'] + ".facet.limit=" + size + "&";
+		var sort = 'count';
+		if (options.facets[item]['order']) {
+		    sort = options.facets[item]['order'];
+		    if (sort === 'term' || sort === 'reverse_term') {
+			sort = 'index';
+		    }
+		    else {
+			sort = 'count';
+		    };
+		};
+		urlfilters += "f." + options.facets[item]['field'] + ".facet.sort=" + sort + "&";
+	    }
+
+	    urlfilters += "facet.mincount=1&";
+
             if ( options.facets.length > 0 ) {
                 urlfilters += "facet=on&";
             }
@@ -1284,16 +1318,17 @@ search box - the end user will not know they are happening.
             // add default query values
             // build the query, starting with default values
             var query = "";
-            //for (var item in options.predefined_filters) {
-            // query += item + ":" + options.predefined_filters[item] + " AND ";
-            //}
+
             $('.facetview_filterselected',obj).each(function() {
                 query += $(this).attr('rel') + ':"' +
                 $(this).attr('href') + '" AND ';
             });
             // add any freetext filter
             if (options.q != "") {
-                query += options.q + '*';
+                query += options.q;
+            }
+            if (!query.endsWith('*')) {
+                query += '*';
             }
             query = query.replace(/ AND $/,"");
             // set a default for blank search
@@ -1302,7 +1337,7 @@ search box - the end user will not know they are happening.
             }
             theurl += options.query_parameter + '=' + query;
             return theurl;
-         };
+	};
         // execute a search
         var dosearch = function() {
             jQuery('.notify_loading').show();
@@ -1314,15 +1349,12 @@ search box - the end user will not know they are happening.
             };
             // make the search query
             var qrystr = '';
-            var url_1 = '';
+            var url_1 = options.search_url;;
             if ( options.search_index == "elasticsearch") {
-                url_1 = options.search_url;
                 qrystr = elasticsearchquery();
             } else {
-                url_1 = options.search_url + solrsearchquery();
                 qrystr = solrsearchquery();
             }
-            //var qrystr = elasticsearchquery();
 
             // augment the URL bar if possible
             if ( options.pushstate ) {
@@ -1332,8 +1364,8 @@ search box - the end user will not know they are happening.
             $.ajax({
                 type: "get",
                 url: url_1,
-                data: {source: qrystr},
-                // processData: false,
+                data: qrystr,
+                processData: false,
                 dataType: options.datatype,
                 jsonp: "json.wrf",
                 success: showresults
