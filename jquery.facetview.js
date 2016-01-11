@@ -698,7 +698,13 @@ search box - the end user will not know they are happening.
             }
             dosearch();
         };
-        
+
+        var clearquery = function(event) {
+            event.preventDefault();
+            $('.facetview_freetext').val("");
+            dosearch();
+        };
+
         // ===============================================
         // functions to do with building results
         // ===============================================
@@ -809,15 +815,27 @@ search box - the end user will not know they are happening.
             var record = options.data['records'][index];
             var result = options.resultwrap_start;
             // add first image where available
-            if (options.display_images) {
-
-                // TODO: this is where we need to take the URL as stored in ID field, translate it to a web URL, and show it.
-
-                var recstr = JSON.stringify(record);
-                var regex = /(http:\/\/\S+?\.(jpg|png|gif|jpeg))/;
-                var img = regex.exec(recstr);
-                if (img) {
-                    result += '<img class="thumbnail" style="float:left; width:100px; margin:0 5px 10px 0; max-height:150px;" src="' + img[0] + '" />';
+            // TODO: this is where we need to take the URL as stored in ID field, translate it to a web URL, and show it.
+            if (options.image_record) {
+                var url = record["id"].replace(options.url_from, options.url_to);
+                if (record["contentType"].toLowerCase() === "image/svg+xml") {
+                    // result += '<svg width="100" height="150"><use xlink:href="' + url + '" /></svg>';
+                    result += '<img class="thumbnail" style="float:left" width="100" height="150" src="' + url + '" />';
+                }
+                else {
+                    result += '<img class="thumbnail" style="float:left; width:100px; margin:0 5px 10px 0; max-height:150px;" src="' + url + '" />';
+                }
+            }
+            else if (options.display_images) {
+                if (record.outlinks) {
+                    for (var out_link_idx=0; out_link_idx < record.outlinks.length; out_link_idx++) {
+                        var regex = /(http:\/\/\S+?\.(jpg|png|gif|jpeg))/;
+                        var img = regex.exec(record.outlinks[out_link_idx]);
+                        if (img) {
+                            result += '<img class="thumbnail" style="float:left; width:100px; margin:0 5px 10px 0; max-height:150px;" src="' + img[0] + '" />';
+                        }
+                    }
+                    result += '<br clear="all">';
                 }
             }
             // add the record based on display template if available
@@ -829,13 +847,29 @@ search box - the end user will not know they are happening.
                     var thekey = display[lineitem][object]['field'];
                     var thevalue = getvalue(record, thekey);
                     if (thevalue && thevalue.toString().length) {
-                            line += display[lineitem][object]['pre'] ? display[lineitem][object]['pre'] : false;
+                        if (display[lineitem][object]['pre']) {
+                            line += display[lineitem][object]['pre'];
+                        };
                         if ( typeof(thevalue) == 'object' ) {
-                            for ( var val = 0; val < thevalue.length; val++ ) {
-                                line += val != 0 ? ', ' : false;
+                            var limit = options.object_limit ? options.object_limit : thevalue.length;
+                            if (limit >= thevalue.length) {
+                                limit = thevalue.length;
+                            };
+                            for ( var val = 0; val < limit; val++ ) {
+                                if (val != 0) {
+                                    line += ', ';
+                                };
                                 line += thevalue[val];
                             }
+                            if (limit < thevalue.length) {
+                                line += "...";
+                            }
                         } else {
+                            if (options.text_limit) {
+                                thevalue = thevalue.length > options.text_limit ?
+                                    thevalue.substring(0, options.text_limit - 3) + "..." :
+                                    thevalue.substring(0, options.text_limit);
+                            }
                             line += thevalue;
                         }
                         display[lineitem][object]['post'] 
@@ -1280,63 +1314,76 @@ search box - the end user will not know they are happening.
         //Solr Search
         var solrsearchquery = function() {
             // set default URL params
-            var urlparams = "wt=json&";
+            var solr_url_params="";
+            var facetview_history_params="";
+
+            solr_url_params += "wt=json&";
+
             for (var item in options.default_url_params) {
-                urlparams += item + "=" + options.default_url_params[item] + "&";
+                solr_url_params += item + "=" + options.default_url_params[item] + "&";
             }
+
             // do paging params
-            var pageparams = "";
             for (var item in options.paging) {
-                pageparams += options.solr_paging_params[item] + "=" + options.paging[item] + "&";
+                solr_url_params += options.solr_paging_params[item] + "=" + options.paging[item] + "&";
             }
+            var from = options.paging.from ? options.paging.from : 0;
+            var size = options.paging.size ? options.paging.size : 10;
+            facetview_history_params += 'paging={"from":' + from + ',"size":' + size + '}&';
+
             // set facet params
-            var urlfilters = "";
             for (var item in options.facets) {
-                urlfilters += "facet.field=" + options.facets[item]['field'] + "&";
+                solr_url_params += "facet.field=" + options.facets[item]['field'] + "&";
                 var size = options.facets[item]['size'] ? options.facets[item]['size'] : 10;
-                urlfilters += "f." + options.facets[item]['field'] + ".facet.limit=" + size + "&";
-		var sort = 'count';
-		if (options.facets[item]['order']) {
-		    sort = options.facets[item]['order'];
-		    if (sort === 'term' || sort === 'reverse_term') {
-			sort = 'index';
-		    }
-		    else {
-			sort = 'count';
-		    };
-		};
-		urlfilters += "f." + options.facets[item]['field'] + ".facet.sort=" + sort + "&";
-	    }
+                solr_url_params += "f." + options.facets[item]['field'] + ".facet.limit=" + size + "&";
+                var sort = 'count';
+                if (options.facets[item]['order']) {
+                    sort = options.facets[item]['order'];
+                    if (sort === 'term' || sort === 'reverse_term') {
+                        sort = 'index';
+                    }
+                    else {
+                        sort = 'count';
+                    };
+            };
+            solr_url_params += "f." + options.facets[item]['field'] + ".facet.sort=" + sort + "&";
+        }
 
-	    urlfilters += "facet.mincount=1&";
+        solr_url_params += "facet.mincount=1&";
 
-            if ( options.facets.length > 0 ) {
-                urlfilters += "facet=on&";
-            }
-            // build starting URL
-            var theurl = urlparams + pageparams + urlfilters;
-            // add default query values
-            // build the query, starting with default values
-            var query = "";
+        if ( options.facets.length > 0 ) {
+            solr_url_params += "facet=on&";
+        }
+        // add default query values
+        // build the query, starting with default values
+        var query = "";
 
-            $('.facetview_filterselected',obj).each(function() {
-                query += $(this).attr('rel') + ':"' +
-                $(this).attr('href') + '" AND ';
-            });
-            // add any freetext filter
-            if (options.q != "") {
-                query += options.q;
-            }
-            if (!query.endsWith('*')) {
-                query += '*';
-            }
-            query = query.replace(/ AND $/,"");
-            // set a default for blank search
-            if (query == "") {
-                query = "*:*";
-            }
-            theurl += options.query_parameter + '=' + query;
-            return theurl;
+        $('.facetview_filterselected',obj).each(function() {
+            query += $(this).attr('rel') + ':"' +
+            $(this).attr('href') + '" AND ';
+        });
+        // add any freetext filter
+        if (options.q != "") {
+            query += options.q;
+        }
+        else {
+            query += '*';
+        }
+        query = query.replace(/ and $/,"");
+
+        solr_url_params += options.query_parameter + '=' + query;
+        if (options.image_record) {
+            solr_url_params += " AND mainType:image";
+        }
+        else {
+            solr_url_params += " AND -mainType:image";
+        }
+
+        // this part is what gets fed into the URL for history purposes.  It has JSON, not strictly URL parameters.
+        facetview_history_params += "query=" + query;
+        options.querystring = facetview_history_params;
+
+        return solr_url_params;
 	};
         // execute a search
         var dosearch = function() {
@@ -1358,8 +1405,11 @@ search box - the end user will not know they are happening.
 
             // augment the URL bar if possible
             if ( options.pushstate ) {
-                var currurl = '?source=' + options.querystring;
-                window.history.pushState("","search",currurl);
+                // options.querystring is different from qrystr.
+                //   It does not include facets or data type.
+                var currurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?' + options.querystring;
+                var stateObj = { url: currurl, innerhtml: document.body.innerHTML };
+                window.history.pushState(stateObj, currurl, currurl);
             };
             $.ajax({
                 type: "get",
@@ -1368,7 +1418,10 @@ search box - the end user will not know they are happening.
                 processData: false,
                 dataType: options.datatype,
                 jsonp: "json.wrf",
-                success: showresults
+                success: showresults,
+                error: function(xhr, error){
+                    debugger;
+                }
             });
         };
 
@@ -1519,7 +1572,7 @@ search box - the end user will not know they are happening.
         thefacetview += '<div class="facetview_plots_container"><div id="line_chart"/><div id="dendrogram"/></div>';
         thefacetview += '<div class="facetview_search_options_container">';
         thefacetview += '<div class="btn-group" style="display:inline-block; margin-right:5px;"> \
-            <a class="btn btn-small" title="clear all search settings and start again" href=""><i class="icon-remove"></i></a> \
+            <a class="btn btn-small facetview_clearquery" title="clear query settings and start again"><i class="icon-remove"></i></a> \
             <a class="btn btn-small facetview_learnmore" title="click to view search help information" href="#"><b>?</b></a> \
             <a class="btn btn-small facetview_howmany" title="change result set size" href="#">{{HOW_MANY}}</a>';
         if ( options.search_sortby.length > 0 ) {
@@ -1588,6 +1641,7 @@ search box - the end user will not know they are happening.
                 $('.facetview_orderby', obj).bind('change',orderby);
                 $('.facetview_order', obj).bind('click',order);
                 $('.facetview_sharesave', obj).bind('click',sharesave);
+                $('.facetview_clearquery', obj).bind('click',clearquery);
 
                 // check paging info is available
                 !options.paging.size && options.paging.size != 0 ? options.paging.size = 10 : "";
@@ -1603,11 +1657,11 @@ search box - the end user will not know they are happening.
                 if ( options.searchbox_class.length == 0 ) {
                     options.q != "" ? $('.facetview_freetext', obj).val(options.q) : "";
                     buildfilters();
-                    $('.facetview_freetext', obj).bindWithDelay('keyup',dosearch,options.freetext_submit_delay);
+                    $('.facetview_freetext', obj).bindWithDelay('keyup',searchfield,options.freetext_submit_delay);
                 } else {
                     options.q != "" ? $(options.searchbox_class).last().val(options.q) : "";
                     buildfilters();
-                    $(options.searchbox_class).bindWithDelay('keyup',dosearch,options.freetext_submit_delay);
+                    $(options.searchbox_class).bindWithDelay('keyup',searchfield,options.freetext_submit_delay);
                 }
 
                 options.source || options.initialsearch ? dosearch() : "";
