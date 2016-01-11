@@ -1404,13 +1404,16 @@ search box - the end user will not know they are happening.
             }
 
             // augment the URL bar if possible
-            if ( options.pushstate ) {
+            if ( options.pushstate || !options.nav_page) {
                 // options.querystring is different from qrystr.
                 //   It does not include facets or data type.
                 var currurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?' + options.querystring;
-                var stateObj = { url: currurl, innerhtml: document.body.innerHTML };
-                window.history.pushState(stateObj, currurl, currurl);
+                if (currurl != window.history.state.url) {
+                    var stateObj = { url: currurl, innerhtml: document.body.innerHTML };
+                    window.history.pushState(stateObj, currurl, currurl);
+                }
             };
+            options.nav_page = false;    // reset the flag that skips history push above, if set
             $.ajax({
                 type: "get",
                 url: url_1,

@@ -14,7 +14,6 @@
   <link rel="stylesheet" href="vendor/jquery-ui-1.8.18.custom/jquery-ui-1.8.18.custom.css">
   <script type="text/javascript" src="vendor/jquery-ui-1.8.18.custom/jquery-ui-1.8.18.custom.min.js"></script>
 
-  <script type="text/javascript" src="jquery.facetview.js"></script>
 
   <link rel="stylesheet" href="css/facetview.css">
 
@@ -27,11 +26,6 @@
   <script src="vendor/d3-3.5.6/d3.min.js" charset="utf-8"></script>
   <script src="vendor/c3-0.4.10/c3.min.js"></script>
 
-  <script>
-    if (document.referrer == "http://localhost:8000") {
-    };
-    </script>
-
   <script type="text/javascript">
 function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
@@ -40,22 +34,24 @@ function getParameterByName(name) {
     return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
-jQuery(document).ready(function($) {
+function drawPage(nav_page) {
+  nav_page = typeof nav_page !== 'undefined' ?  nav_page : false;
   document.cookie="query="+getParameterByName('query');
 
   var query = getParameterByName('query');
   var paging = getParameterByName('paging')
-  paging = $.parseJSON(paging);
-if (!paging)
-{
-    paging = {"from": 0, "size": 10};
-};
-if (!paging.from) {
-    paging['from'] = 0;
-}
-if (!paging.size) {
-    paging['size'] = 10;
-}
+  paging = $.parseJSON();
+  if (!paging)
+  {
+      paging = {"from": 0, "size": 10};
+  };
+  if (!paging.from) {
+      paging['from'] = 0;
+  }
+  if (!paging.size) {
+      paging['size'] = 10;
+  }
+  $('.facet-view-simple').empty();
   $('.facet-view-simple').facetview({
       // "config_file": "http://imagecat.dyndns.org/atf/facetview/atf_images_cfg.json"
     "search_url": "http://imagecat.dyndns.org:8983/solr/imagecatdev/select?",
@@ -64,6 +60,7 @@ if (!paging.size) {
     "object_limit": 10,
     "paging": paging,
     "q" : query,
+    "nav_page": nav_page,
     "facets": [
         {"field":"persons", "display":"Persons"},
         {"field":"phonenumbers", "display":"Phone Numbers"},
@@ -143,15 +140,21 @@ if (!paging.size) {
 
     });
 $('.facetview_filtershow' ).trigger( "click" );
+};
+
+jQuery(document).ready(function($) {
+   drawPage();
 });
 
-$(window).on('hashchange', function() {
-    location.hash = "noBack";
-});
+window.onpopstate = function(state, title, url) {
+    drawPage(true);
+};
+
   </script>
+
 </head>
 
-<body>
+<body onunload="">
 
 <div class="navbar navbar-fixed-top">
   <div class="navbar-inner">
@@ -179,4 +182,5 @@ $(window).on('hashchange', function() {
 
 </div>
 </body>
+<script type="text/javascript" src="jquery.facetview.js"></script>
 </html>
