@@ -702,6 +702,7 @@ search box - the end user will not know they are happening.
         var clearquery = function(event) {
             event.preventDefault();
             $('.facetview_freetext').val("");
+            options.paging.from = 0;
             dosearch();
         };
 
@@ -1331,13 +1332,20 @@ search box - the end user will not know they are happening.
             var size = options.paging.size ? options.paging.size : 10;
             facetview_history_params += 'paging={"from":' + from + ',"size":' + size + '}&';
 
-            // set facet params
+            facetview_history_params += 'facets=[';
             for (var item in options.facets) {
+                facetview_history_params += '{"field":"'+options.facets[item]['field'] + '",';
+                facetview_history_params += '"display":"'+options.facets[item]['display'] + '",';
                 solr_url_params += "facet.field=" + options.facets[item]['field'] + "&";
-                var size = options.facets[item]['size'] ? options.facets[item]['size'] : 10;
+                var size = options.default_facet_size ? options.default_facet_size : 10;
+                if (options.facets[item]['size']) {
+                    size = options.facets[item]['size'];
+                    facetview_history_params += '"size":'+ size + ',';
+                }
                 solr_url_params += "f." + options.facets[item]['field'] + ".facet.limit=" + size + "&";
                 var sort = 'count';
                 if (options.facets[item]['order']) {
+                    facetview_history_params += '"order":"'+options.facets[item]['order'] + '",';
                     sort = options.facets[item]['order'];
                     if (sort === 'term' || sort === 'reverse_term') {
                         sort = 'index';
@@ -1346,9 +1354,15 @@ search box - the end user will not know they are happening.
                         sort = 'count';
                     };
             };
+            // clean trailing comma
+            facetview_history_params = facetview_history_params.slice(0, -1);
+            facetview_history_params += '},';
             solr_url_params += "f." + options.facets[item]['field'] + ".facet.sort=" + sort + "&";
         }
 
+        // clean trailing comma
+        facetview_history_params = facetview_history_params.slice(0, -1);
+        facetview_history_params += ']&';
         solr_url_params += "facet.mincount=1&";
 
         if ( options.facets.length > 0 ) {
@@ -1358,10 +1372,18 @@ search box - the end user will not know they are happening.
         // build the query, starting with default values
         var query = "";
 
+        facetview_history_params += 'active_facets={';
         $('.facetview_filterselected',obj).each(function() {
             query += $(this).attr('rel') + ':"' +
             $(this).attr('href') + '" AND ';
+            facetview_history_params += '"'+$(this).attr('rel') + '":"' + $(this).attr('href')+'",';
         });
+
+        if (facetview_history_params.slice(-1)==','){
+            facetview_history_params = facetview_history_params.slice(0, -1);
+        }
+        facetview_history_params += '}';
+
         // add any freetext filter
         if (options.q != "") {
             query += options.q;
@@ -1380,7 +1402,8 @@ search box - the end user will not know they are happening.
         }
 
         // this part is what gets fed into the URL for history purposes.  It has JSON, not strictly URL parameters.
-        facetview_history_params += "query=" + query;
+        facetview_history_params += "query=" + options.q ? options.q : "";
+        options.sharesave_link ? $('.facetview_sharesaveurl', obj).val('http://' + window.location.host + window.location.pathname + '?' + facetview_history_params) : "";
         options.querystring = facetview_history_params;
 
         return solr_url_params;
@@ -1407,8 +1430,8 @@ search box - the end user will not know they are happening.
             if ( options.pushstate || !options.nav_page) {
                 // options.querystring is different from qrystr.
                 //   It does not include facets or data type.
-                var currurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?' + options.querystring;
-                if (currurl != window.history.state.url) {
+                var currurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?' + encodeURIComponent(options.querystring);
+                if (!window.history.state || currurl != window.history.state.url) {
                     var stateObj = { url: currurl, innerhtml: document.body.innerHTML };
                     window.history.pushState(stateObj, currurl, currurl);
                 }
@@ -1665,6 +1688,14 @@ search box - the end user will not know they are happening.
                     options.q != "" ? $(options.searchbox_class).last().val(options.q) : "";
                     buildfilters();
                     $(options.searchbox_class).bindWithDelay('keyup',searchfield,options.freetext_submit_delay);
+                }
+
+                if (options.active_facets) {
+                    for (var rel in options.active_facets) {
+                        if (options.active_facets.hasOwnProperty(rel)){
+                            clickfilterchoice(null,rel,options.active_facets[rel]);
+                        }
+                    }
                 }
 
                 options.source || options.initialsearch ? dosearch() : "";
